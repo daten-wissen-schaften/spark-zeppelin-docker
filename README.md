@@ -1,4 +1,4 @@
-# Purpose 
+# spark-zeppelin-docker 
 
 This docker image provides a local *spark* installation with *zeppelin* and a running *spark-history-server*.
 It is uploaded in [dockerhub](https://hub.docker.com/r/datenwissenschaften/spark-zeppelin-docker/) in a public repository.
