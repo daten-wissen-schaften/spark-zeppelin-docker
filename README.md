@@ -8,9 +8,14 @@ It is uploaded in [dockerhub](https://hub.docker.com/r/datenwissenschaften/spark
 - Zeppelin version="0.8.1"
 - Hadoop version="2.8.5"
  
-## Start the container
+## Start the container with example notebooks
 ```
   docker run -it -p 18080:18080 -p 8088:8080 -d datenwissenschaften/spark-zeppelin-docker
+```
+
+## Mount local notebooks
+```
+  docker run -it -p 18080:18080 -p 8088:8080 -v $PWD/notebook:/notebook -d datenwissenschaften/spark-zeppelin-docker
 ```
 
 ## Open Zeppelin and Spark History Server  
