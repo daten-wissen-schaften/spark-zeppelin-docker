@@ -9,14 +9,19 @@ LABEL zeppelin.version=${ZEPPELIN_VERSION}
 LABEL spark.version=${SPARK_VERSION}
 LABEL hadoop.version=${HADOOP_VERSION}
 
-########
-# JAVA #
-########
+#################
+# JAVA & PYTHON #
+#################
 
 RUN apt-get -y update &&\
-    apt-get -y install curl less &&\
+    apt-get -y install curl less psmisc &&\
     apt-get install -y openjdk-8-jdk &&\
-    apt-get -y install vim
+    apt-get -y install vim &&\
+    apt-get -y install python3
+
+ENV PYSPARK_PYTHON /usr/bin/python3
+
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 
 ###################
 # DOWNLOADS FIRST #
