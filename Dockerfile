@@ -1,13 +1,15 @@
-FROM ubuntu:18.04
+FROM ubuntu:latest
 
 ARG ZEPPELIN_VERSION="0.8.1"
-ARG SPARK_VERSION="2.4.5"
+ARG SPARK_VERSION="2.4.3"
 ARG HADOOP_VERSION="2.8.5"
+ARG LIVY_VERSION="0.7.0-incubating"
 
 LABEL maintainer="datenwissenschaften"
 LABEL zeppelin.version=${ZEPPELIN_VERSION}
 LABEL spark.version=${SPARK_VERSION}
 LABEL hadoop.version=${HADOOP_VERSION}
+LABEL livy.version=${LIVY_VERSION}
 
 #################
 # JAVA & PYTHON #
@@ -17,6 +19,7 @@ RUN apt-get -y update &&\
     apt-get -y install curl less psmisc &&\
     apt-get install -y openjdk-8-jdk &&\
     apt-get -y install vim &&\
+    apt-get -y install unzip &&\
     apt-get -y install python3
 
 ENV PYSPARK_PYTHON /usr/bin/python3
@@ -36,6 +39,9 @@ RUN mkdir /usr/local/spark &&\
     mkdir /tmp/spark-events
 RUN curl -s ${SPARK_ARCHIVE} | tar -xz -C /usr/local/spark --strip-components=1
 
+ARG LIVY_ARCHIVE=https://ftp.halifax.rwth-aachen.de/apache/incubator/livy/${LIVY_VERSION}/apache-livy-${LIVY_VERSION}-bin.zip
+RUN curl -o livy.zip ${LIVY_ARCHIVE} && unzip livy.zip -d /usr/local && rm livy.zip && mv /usr/local/apache-livy-${LIVY_VERSION}-bin /usr/local/livy
+
 ENV ZEPPELIN_HOME /usr/zeppelin/zeppelin-${ZEPPELIN_VERSION}-bin-all
 RUN mkdir -p $ZEPPELIN_HOME \
   && mkdir -p $ZEPPELIN_HOME/logs \
@@ -48,6 +54,7 @@ RUN echo '{ "allow_root": true }' > /root/.bowerrc
 ##########
 
 ENV HADOOP_HOME /usr/local/hadoop
+ENV HADOOP_CONF_DIR=/usr/local/hadoop/conf
 ENV PATH $PATH:${HADOOP_HOME}/bin
 
 #########
@@ -58,6 +65,12 @@ ENV SPARK_HOME /usr/local/spark
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
 ENV PATH $PATH:${SPARK_HOME}/bin
 COPY spark-defaults.conf ${SPARK_HOME}/conf/
+
+########
+# LIVY #
+########
+
+ENV LIVY_HOME /usr/local/livy
 
 ############
 # Zeppelin #
@@ -74,4 +87,4 @@ ENV ZEPPELIN_NOTEBOOK_DIR /notebook
 RUN mkdir /work
 WORKDIR /work
 
-ENTRYPOINT export SPARK_DIST_CLASSPATH=$(hadoop classpath); /usr/local/spark/sbin/start-history-server.sh; $ZEPPELIN_HOME/bin/zeppelin-daemon.sh start && bash
+ENTRYPOINT export SPARK_DIST_CLASSPATH=$(hadoop classpath); /usr/local/spark/sbin/start-history-server.sh; $LIVY_HOME/bin/livy-server start; $ZEPPELIN_HOME/bin/zeppelin-daemon.sh start && bash
