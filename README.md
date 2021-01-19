@@ -52,3 +52,15 @@ spark-submit --class <your-class-name-with-package> \
       <your-jar-file.jar> \
       [<your-program-parameters>]
 ```
+
+## Custom build
+
+To make a custom build with custom jars for Apache Spark, Zeppelin and Livy inherit with a new Dockerfile:
+
+```
+FROM datenwissenschaften/spark-zeppelin-docker
+
+COPY target/custom.jar ${SPARK_HOME}/jars/
+COPY target/own.jar ${SPARK_HOME}/jars/
+COPY target/library.jar ${SPARK_HOME}/jars/
+```
