@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:bionic
 
 ARG ZEPPELIN_VERSION="0.8.1"
 ARG SPARK_VERSION="2.4.3"
@@ -17,11 +17,13 @@ LABEL livy.version=${LIVY_VERSION}
 
 RUN apt-get -y update &&\
     apt-get -y install curl less psmisc &&\
-    apt-get install -y openjdk-8-jdk &&\
+    apt-get -y install openjdk-8-jdk &&\
     apt-get -y install vim &&\
     apt-get -y install unzip &&\
-    apt-get -y install python3
-
+    apt-get -y install python3-pip
+    
+RUN python3 -m pip install findspark
+    
 ENV PYSPARK_PYTHON /usr/bin/python3
 
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
