@@ -63,4 +63,7 @@ FROM datenwissenschaften/spark-zeppelin-docker
 COPY target/custom.jar ${SPARK_HOME}/jars/
 COPY target/own.jar ${SPARK_HOME}/jars/
 COPY target/library.jar ${SPARK_HOME}/jars/
+
+RUN python3 -m pip install numpy
+RUN python3 -m pip install pandas
 ```

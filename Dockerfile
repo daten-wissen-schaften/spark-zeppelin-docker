@@ -73,6 +73,7 @@ COPY spark-defaults.conf ${SPARK_HOME}/conf/
 ########
 
 ENV LIVY_HOME /usr/local/livy
+COPY livy.conf ${LIVY_HOME}/conf/
 
 ############
 # Zeppelin #
