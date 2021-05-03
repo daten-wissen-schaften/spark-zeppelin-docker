@@ -21,9 +21,11 @@ RUN apt-get -y update &&\
     apt-get -y install vim &&\
     apt-get -y install unzip &&\
     apt-get -y install python3-pip
-    
-RUN python3 -m pip install findspark
-    
+
+RUN python3 -m pip install findspark &&\
+    python3 -m pip install numpy &&\
+    python3 -m pip install pandas
+
 ENV PYSPARK_PYTHON /usr/bin/python3
 
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
