@@ -1,9 +1,9 @@
 FROM ubuntu:bionic
 
-ARG ZEPPELIN_VERSION="0.8.1"
-ARG SPARK_VERSION="2.4.3"
-ARG HADOOP_VERSION="2.8.5"
-ARG LIVY_VERSION="0.7.0-incubating"
+ARG ZEPPELIN_VERSION="0.9.0"
+ARG SPARK_VERSION="3.0.1"
+ARG HADOOP_VERSION="3.2.1"
+ARG LIVY_VERSION="0.7.1-incubating"
 
 LABEL maintainer="datenwissenschaften"
 LABEL zeppelin.version=${ZEPPELIN_VERSION}
@@ -23,6 +23,7 @@ RUN apt-get -y update &&\
     apt-get -y install python3-pip
 
 RUN python3 -m pip install findspark &&\
+    python3 -m pip install Cython &&\
     python3 -m pip install numpy &&\
     python3 -m pip install pandas
 
@@ -66,7 +67,7 @@ ENV PATH $PATH:${HADOOP_HOME}/bin
 #########
 
 ENV SPARK_HOME /usr/local/spark
-ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
+ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk
 ENV PATH $PATH:${SPARK_HOME}/bin
 COPY spark-defaults.conf ${SPARK_HOME}/conf/
 
@@ -82,12 +83,20 @@ COPY livy.conf ${LIVY_HOME}/conf/
 ############
 
 ENV ZEPPELIN_INTERPRETER_DEP_MVNREPO https://repo1.maven.org/maven2/
+ENV ZEPPELIN_ADDR 0.0.0.0
 ENV ZEPPELIN_PORT 8080
 EXPOSE $ZEPPELIN_PORT
 
 RUN mkdir /notebook
 ENV ZEPPELIN_CONF_DIR $ZEPPELIN_HOME/conf
 ENV ZEPPELIN_NOTEBOOK_DIR /notebook
+
+############
+# ARCH FIX #
+############
+
+RUN mv /usr/lib/jvm/java-1.8.0-openjdk-arm64 /usr/lib/jvm/java-8-openjdk || true
+RUN mv /usr/lib/jvm/java-1.8.0-openjdk-amd64 /usr/lib/jvm/java-8-openjdk || true
 
 RUN mkdir /work
 WORKDIR /work
