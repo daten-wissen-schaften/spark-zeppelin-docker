@@ -38,6 +38,11 @@ ENV PYSPARK_PYTHON /usr/bin/python3
 
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 
+ENV JAVA_HOME /usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto
+
+RUN java -version
+RUN python -v
+
 #############
 # DOWNLOADS #
 #############
@@ -80,7 +85,6 @@ ENV PATH $PATH:${HADOOP_HOME}/bin
 #########
 
 ENV SPARK_HOME /usr/local/spark
-ENV JAVA_HOME /usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto
 ENV PATH $PATH:${SPARK_HOME}/bin
 COPY spark-defaults.conf ${SPARK_HOME}/conf/
 
