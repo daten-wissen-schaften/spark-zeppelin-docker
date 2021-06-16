@@ -4,6 +4,7 @@ ARG ZEPPELIN_VERSION="0.9.0"
 ARG SPARK_VERSION="3.0.1"
 ARG HADOOP_VERSION="3.2.1"
 ARG LIVY_VERSION="0.7.1-incubating"
+ARG JAVA_VERSION="8"
 
 LABEL maintainer="datenwissenschaften"
 LABEL zeppelin.version=${ZEPPELIN_VERSION}
@@ -25,7 +26,7 @@ RUN apt-get -y update &&\
     apt-get -y install curl less psmisc &&\
     apt-get -y install vim &&\
     apt-get -y install unzip &&\
-    apt-get -y install java-11-amazon-corretto-jdk &&\
+    apt-get -y install java-${JAVA_VERSION}-amazon-corretto-jdk &&\
     apt-get -y install python3-pip
 
 RUN python3 -m pip install findspark &&\
@@ -79,7 +80,7 @@ ENV PATH $PATH:${HADOOP_HOME}/bin
 #########
 
 ENV SPARK_HOME /usr/local/spark
-ENV JAVA_HOME /usr/lib/jvm/java-11-amazon-corretto
+ENV JAVA_HOME /usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto
 ENV PATH $PATH:${SPARK_HOME}/bin
 COPY spark-defaults.conf ${SPARK_HOME}/conf/
 
