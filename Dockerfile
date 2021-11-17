@@ -58,7 +58,9 @@ ENV ZEPPELIN_HOME /usr/local/zeppelin
 RUN curl -s https://archive.apache.org/dist/zeppelin/zeppelin-${ZEPPELIN_VERSION}/zeppelin-${ZEPPELIN_VERSION}-bin-all.tgz | tar -xz -C /usr/local/ &&\
     echo '{ "allow_root": true }' > /root/.bowerrc &&\
     echo "unsafe-perm=true" > ~/.npmrc &&\
-    mv /usr/local/zeppelin-${ZEPPELIN_VERSION}-bin-all /usr/local/zeppelin
+    mv /usr/local/zeppelin-${ZEPPELIN_VERSION}-bin-all ${ZEPPELIN_HOME} &&\
+    mkdir -p ${ZEPPELIN_HOME}/logs &&\
+    mkdir -p ${ZEPPELIN_HOME}/run
 
 
 ##########
