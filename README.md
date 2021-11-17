@@ -8,7 +8,8 @@ It is uploaded in [dockerhub](https://hub.docker.com/r/datenwissenschaften/spark
 - Spark version="3.0.1"
 - Zeppelin version="0.9.0"
 - Hadoop version="3.2.1"
-- Livy version="0.7.1-incubating"
+- Livy version="0.8.0-SNAPSHOT"
+- Amazon Coretto JDK version="1.8.0"
 
 ## Start the container with example notebooks
 

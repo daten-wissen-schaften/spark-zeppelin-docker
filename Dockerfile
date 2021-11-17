@@ -3,7 +3,7 @@ FROM ubuntu:bionic
 ARG ZEPPELIN_VERSION="0.9.0"
 ARG SPARK_VERSION="3.0.1"
 ARG HADOOP_VERSION="3.2.1"
-ARG LIVY_VERSION="0.7.1-incubating"
+ARG LIVY_VERSION="0.8.0-SNAPSHOT"
 ARG JAVA_VERSION="1.8.0"
 
 LABEL maintainer="datenwissenschaften"
@@ -23,13 +23,11 @@ RUN wget --quiet -O - https://apt.corretto.aws/corretto.key | apt-key add - &&\
     add-apt-repository 'deb https://apt.corretto.aws stable main'
 
 RUN apt-get -y update &&\
-    apt-get -y install curl less psmisc &&\
-    apt-get -y install vim &&\
-    apt-get -y install unzip &&\
+    apt-get -y install curl less psmisc vim unzip &&\
     apt-get -y install java-${JAVA_VERSION}-amazon-corretto-jdk &&\
-    apt-get -y install python3-pip
-
-RUN python3 -m pip install findspark &&\
+    apt-get -y install python3-pip &&\
+    apt-get -y install maven &&\
+    python3 -m pip install findspark &&\
     python3 -m pip install Cython &&\
     python3 -m pip install numpy &&\
     python3 -m pip install pandas
@@ -40,15 +38,15 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 
 ENV JAVA_HOME /usr/lib/jvm/java-${JAVA_VERSION}-amazon-corretto
 
-RUN java -version
-RUN python -v
+RUN java -version &&\
+    python -v
 
 #############
 # DOWNLOADS #
 #############
 
 ARG HADOOP_ARCHIVE=https://archive.apache.org/dist/hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz
-RUN mkdir /usr/local/hadoop  &&\
+RUN mkdir /usr/local/hadoop &&\
     curl -s ${HADOOP_ARCHIVE} | tar -xz -C /usr/local/hadoop --strip-components=1
 
 ARG SPARK_ARCHIVE=https://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-without-hadoop.tgz
@@ -56,19 +54,12 @@ RUN mkdir /usr/local/spark &&\
     mkdir /tmp/spark-events &&\
     curl -s ${SPARK_ARCHIVE} | tar -xz -C /usr/local/spark --strip-components=1
 
-ARG LIVY_ARCHIVE=https://ftp.halifax.rwth-aachen.de/apache/incubator/livy/${LIVY_VERSION}/apache-livy-${LIVY_VERSION}-bin.zip
-RUN curl -o livy.zip ${LIVY_ARCHIVE} &&\
-    unzip livy.zip -d /usr/local &&\
-    rm livy.zip &&\
-    mv /usr/local/apache-livy-${LIVY_VERSION}-bin /usr/local/livy
-
-ENV ZEPPELIN_HOME /usr/zeppelin/zeppelin-${ZEPPELIN_VERSION}-bin-all
-RUN mkdir -p $ZEPPELIN_HOME &&\
-    mkdir -p $ZEPPELIN_HOME/logs &&\
-    mkdir -p $ZEPPELIN_HOME/run &&\
-    curl -s https://archive.apache.org/dist/zeppelin/zeppelin-${ZEPPELIN_VERSION}/zeppelin-${ZEPPELIN_VERSION}-bin-all.tgz | tar -xz -C /usr/zeppelin &&\
+ENV ZEPPELIN_HOME /usr/local/zeppelin
+RUN curl -s https://archive.apache.org/dist/zeppelin/zeppelin-${ZEPPELIN_VERSION}/zeppelin-${ZEPPELIN_VERSION}-bin-all.tgz | tar -xz -C /usr/local/ &&\
     echo '{ "allow_root": true }' > /root/.bowerrc &&\
-    echo "unsafe-perm=true" > ~/.npmrc
+    echo "unsafe-perm=true" > ~/.npmrc &&\
+    mv /usr/local/zeppelin-${ZEPPELIN_VERSION}-bin-all /usr/local/zeppelin
+
 
 ##########
 # HADOOP #
@@ -92,7 +83,18 @@ COPY spark-defaults.conf ${SPARK_HOME}/conf/
 # LIVY #
 ########
 
-ENV LIVY_HOME /usr/local/livy
+ENV LIVY_HOME /usr/local/incubator-livy
+
+COPY scala_2_12.patch /usr/local/
+
+RUN apt-get -y install git
+RUN cd /usr/local/ &&\
+    git clone https://github.com/apache/incubator-livy.git &&\
+    cd incubator-livy &&\
+    git apply /usr/local/scala_2_12.patch &&\
+    mvn clean package -DskipTests -DskipITs -Dmaven.javadoc.skip=true -Dmaven.test.skip=true &&\
+    rm /usr/local/scala_2_12.patch
+    
 COPY livy.conf ${LIVY_HOME}/conf/
 
 ############
@@ -104,8 +106,10 @@ ENV ZEPPELIN_ADDR 0.0.0.0
 ENV ZEPPELIN_PORT 8080
 EXPOSE $ZEPPELIN_PORT
 
+RUN mkdir /conf
 RUN mkdir /notebook
-ENV ZEPPELIN_CONF_DIR $ZEPPELIN_HOME/conf
+
+ENV ZEPPELIN_CONF_DIR /conf
 ENV ZEPPELIN_NOTEBOOK_DIR /notebook
 
 RUN mkdir /work
