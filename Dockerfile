@@ -1,16 +1,14 @@
 FROM ubuntu:bionic
 
-ARG ZEPPELIN_VERSION="0.9.0"
+ARG ZEPPELIN_VERSION="0.10.0"
 ARG SPARK_VERSION="3.0.1"
 ARG HADOOP_VERSION="3.2.1"
-ARG LIVY_VERSION="0.8.0-SNAPSHOT"
 ARG JAVA_VERSION="1.8.0"
 
 LABEL maintainer="datenwissenschaften"
 LABEL zeppelin.version=${ZEPPELIN_VERSION}
 LABEL spark.version=${SPARK_VERSION}
 LABEL hadoop.version=${HADOOP_VERSION}
-LABEL livy.version=${LIVY_VERSION}
 
 #################
 # JAVA & PYTHON #
@@ -27,6 +25,8 @@ RUN apt-get -y update &&\
     apt-get -y install java-${JAVA_VERSION}-amazon-corretto-jdk &&\
     apt-get -y install python3-pip &&\
     apt-get -y install maven &&\
+    apt-get -y install nodejs &&\
+    apt-get -y install npm &&\
     python3 -m pip install findspark &&\
     python3 -m pip install Cython &&\
     python3 -m pip install numpy &&\
@@ -81,24 +81,6 @@ ENV SPARK_HOME /usr/local/spark
 ENV PATH $PATH:${SPARK_HOME}/bin
 COPY spark-defaults.conf ${SPARK_HOME}/conf/
 
-########
-# LIVY #
-########
-
-ENV LIVY_HOME /usr/local/incubator-livy
-
-COPY scala_2_12.patch /usr/local/
-
-RUN apt-get -y install git
-RUN cd /usr/local/ &&\
-    git clone https://github.com/apache/incubator-livy.git &&\
-    cd incubator-livy &&\
-    git apply /usr/local/scala_2_12.patch &&\
-    mvn clean package -DskipTests -DskipITs -Dmaven.javadoc.skip=true -Dmaven.test.skip=true &&\
-    rm /usr/local/scala_2_12.patch
-    
-COPY livy.conf ${LIVY_HOME}/conf/
-
 ############
 # ZEPPELIN #
 ############
@@ -108,13 +90,22 @@ ENV ZEPPELIN_ADDR 0.0.0.0
 ENV ZEPPELIN_PORT 8080
 EXPOSE $ZEPPELIN_PORT
 
-RUN mkdir /conf
-RUN mkdir /notebook
+RUN mkdir -p /work/zeppelin/conf
+RUN mkdir -p /work/zeppelin/notebook
+RUN mkdir -p /work/zeppelin/logs
 
-ENV ZEPPELIN_CONF_DIR /conf
-ENV ZEPPELIN_NOTEBOOK_DIR /notebook
+ENV ZEPPELIN_CONF_DIR /work/zeppelin/conf
+ENV ZEPPELIN_NOTEBOOK_DIR /work/zeppelin/notebook
+ENV ZEPPELIN_LOG_DIR /work/zeppelin/logs
 
-RUN mkdir /work
+COPY log4j.properties /work/zeppelin/conf
+
+########
+# LOGS #
+########
+
+RUN npm i frontail -g
+
 WORKDIR /work
 
-ENTRYPOINT export SPARK_DIST_CLASSPATH=$(hadoop classpath); /usr/local/spark/sbin/start-history-server.sh; $LIVY_HOME/bin/livy-server start; $ZEPPELIN_HOME/bin/zeppelin-daemon.sh start && bash
+ENTRYPOINT export SPARK_DIST_CLASSPATH=$(hadoop classpath); /usr/local/spark/sbin/start-history-server.sh; $ZEPPELIN_HOME/bin/zeppelin-daemon.sh start; frontail /work/zeppelin/logs/*.log && bash

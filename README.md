@@ -1,6 +1,6 @@
 # spark-zeppelin-docker 
 
-This docker image provides a local *spark* installation with *zeppelin*, *livy* and a running *spark-history-server*.
+This docker image provides a local *spark* installation with *zeppelin*, and a running *spark-history-server*.
 It is uploaded in [dockerhub](https://hub.docker.com/r/datenwissenschaften/spark-zeppelin-docker/) in a public repository.
 
 ## Components
@@ -8,7 +8,6 @@ It is uploaded in [dockerhub](https://hub.docker.com/r/datenwissenschaften/spark
 - Spark version="3.0.1"
 - Zeppelin version="0.9.0"
 - Hadoop version="3.2.1"
-- Livy version="0.8.0-SNAPSHOT"
 - Amazon Coretto JDK version="1.8.0"
 
 ## Start the container with example notebooks
@@ -20,7 +19,7 @@ It is uploaded in [dockerhub](https://hub.docker.com/r/datenwissenschaften/spark
 ## Mount local notebooks
 
 ```
-  docker run -it -p 18080:18080 -p 8088:8080 -p 8998:8998 -v $PWD/notebook:/notebook -d datenwissenschaften/spark-zeppelin-docker
+  docker run -it -p 18080:18080 -p 8088:8080 -p 8998:8998 -v $PWD/notebook:/work/zeppelin/notebook -d datenwissenschaften/spark-zeppelin-docker
 ```
 
 ## Open Zeppelin and Spark History Server  
@@ -28,7 +27,6 @@ It is uploaded in [dockerhub](https://hub.docker.com/r/datenwissenschaften/spark
 In your local browser 
 - Zeppelin: http://localhost:8088/#/
 - Spark History Server: http://localhost:18080/?showIncomplete=true
-- Livy Server: http://localhost:8998/ui
 
 Probably, you have to wait roughly 10 second until zeppelin daemon has been started, right after starting the container.
 
