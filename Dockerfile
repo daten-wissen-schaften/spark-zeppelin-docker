@@ -1,4 +1,4 @@
-FROM ubuntu:bionic
+FROM ubuntu:18.04
 
 ARG ZEPPELIN_VERSION="0.10.0"
 ARG SPARK_VERSION="3.0.1"
