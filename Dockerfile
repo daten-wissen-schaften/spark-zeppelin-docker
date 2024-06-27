@@ -1,9 +1,9 @@
-FROM ubuntu:bionic
+FROM ubuntu:noble
 
-ARG ZEPPELIN_VERSION="0.10.0"
-ARG SPARK_VERSION="3.0.1"
-ARG HADOOP_VERSION="3.2.1"
-ARG JAVA_VERSION="1.8.0"
+ARG ZEPPELIN_VERSION="0.11.1"
+ARG SPARK_VERSION="3.5.1"
+ARG HADOOP_VERSION="3.3.4"
+ARG JAVA_VERSION="11"
 
 LABEL maintainer="datenwissenschaften"
 LABEL zeppelin.version=${ZEPPELIN_VERSION}
@@ -26,11 +26,12 @@ RUN apt-get -y update &&\
     apt-get -y install python3-pip &&\
     apt-get -y install maven &&\
     apt-get -y install nodejs &&\
-    apt-get -y install npm &&\
-    python3 -m pip install findspark &&\
-    python3 -m pip install Cython &&\
-    python3 -m pip install numpy &&\
-    python3 -m pip install pandas
+    apt-get -y install npm
+
+RUN python3 -m pip install findspark --break-system-packages &&\
+    python3 -m pip install Cython --break-system-packages &&\
+    python3 -m pip install numpy --break-system-packages &&\
+    python3 -m pip install pandas --break-system-packages
 
 ENV PYSPARK_PYTHON /usr/bin/python3
 
@@ -99,6 +100,11 @@ ENV ZEPPELIN_NOTEBOOK_DIR /work/zeppelin/notebook
 ENV ZEPPELIN_LOG_DIR /work/zeppelin/logs
 
 COPY log4j.properties /work/zeppelin/conf
+
+# FIX FOR 0.11.1
+
+RUN cd /usr/local/zeppelin/interpreter/spark &&\
+    find . -type f -name "._*" -exec rm -f {} \;
 
 ########
 # LOGS #

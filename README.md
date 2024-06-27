@@ -5,10 +5,10 @@ It is uploaded in [dockerhub](https://hub.docker.com/r/datenwissenschaften/spark
 
 ## Components
 
-- Spark version="3.0.1"
-- Zeppelin version="0.9.0"
-- Hadoop version="3.2.1"
-- Amazon Coretto JDK version="1.8.0"
+- Spark version="3.5.1"
+- Zeppelin version="0.11.1"
+- Hadoop version="3.3.4"
+- Amazon Coretto JDK version="11"
 
 ## Start the container with example notebooks
 
@@ -30,7 +30,7 @@ In your local browser
 
 Probably, you have to wait roughly 10 second until zeppelin daemon has been started, right after starting the container.
 
-## Spark-App
+## Custom jars
  
 ### Copy your spark jar to docker container
 
@@ -54,15 +54,15 @@ spark-submit --class <your-class-name-with-package> \
 
 ## Custom build
 
-To make a custom build with custom jars for Apache Spark, Zeppelin and Livy inherit with a new Dockerfile:
+To make a custom build with custom jars and python packages inherit with a new Dockerfile:
 
 ```
 FROM datenwissenschaften/spark-zeppelin-docker
 
 COPY target/custom.jar ${SPARK_HOME}/jars/
 COPY target/own.jar ${SPARK_HOME}/jars/
-COPY target/library.jar ${SPARK_HOME}/jars/
+COPY target/libraries.jar ${SPARK_HOME}/jars/
 
-RUN python3 -m pip install numpy
-RUN python3 -m pip install pandas
+RUN python3 -m pip install numpy --break-system-packages
+RUN python3 -m pip install pandas --break-system-packages
 ```
