@@ -8,17 +8,40 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: checkout code
+      - name: Checkout code
         uses: actions/checkout@v2
-      - name: install buildx
+
+      - name: Get latest tag
+        id: get_tag
+        run: echo "::set-output name=tag::$(git describe --tags `git rev-list --tags --max-count=1`)"
+
+      - name: Check if Docker image tag exists
+        id: check_tag
+        run: |
+          TAG_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" https://hub.docker.com/v2/repositories/datenwissenschaften/spark-zeppelin-docker/tags/${{ steps.get_tag.outputs.tag }})
+          if [ "$TAG_EXISTS" == "200" ]; then
+            echo "Tag exists"
+            echo "::set-output name=exists::true"
+          else
+            echo "Tag does not exist"
+            echo "::set-output name=exists::false"
+          fi
+
+      - name: Install buildx
+        if: steps.check_tag.outputs.exists == 'false'
         id: buildx
         uses: crazy-max/ghaction-docker-buildx@v1
         with:
-          version: latest     
-      - name: login to docker hub
+          version: latest
+
+      - name: Login to Docker Hub
+        if: steps.check_tag.outputs.exists == 'false'
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-      - name: build the image
+
+      - name: Build and push the image
+        if: steps.check_tag.outputs.exists == 'false'
         run: |
           docker buildx build --push \
+          --tag datenwissenschaften/spark-zeppelin-docker:${{ steps.get_tag.outputs.tag }} \
           --tag datenwissenschaften/spark-zeppelin-docker:latest \
           --platform linux/amd64,linux/arm64 .
