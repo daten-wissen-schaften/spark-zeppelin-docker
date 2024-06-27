@@ -13,33 +13,42 @@ jobs:
 
       - name: Get latest tag
         id: get_tag
-        run: echo "::set-output name=tag::$(git describe --tags `git rev-list --tags --max-count=1`)"
+        run: |
+          git fetch --tags
+          TAG=$(git describe --tags `git rev-list --tags --max-count=1` 2>/dev/null || echo "none")
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "::set-output name=tag::$TAG"
+        shell: bash
 
       - name: Check if Docker image tag exists
         id: check_tag
         run: |
+          if [ "${{ steps.get_tag.outputs.tag }}" == "none" ]; then
+            echo "No tags found. Exiting."
+            exit 0
+          fi
           TAG_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" https://hub.docker.com/v2/repositories/datenwissenschaften/spark-zeppelin-docker/tags/${{ steps.get_tag.outputs.tag }})
           if [ "$TAG_EXISTS" == "200" ]; then
             echo "Tag exists"
-            echo "::set-output name=exists::true"
+            echo "exists=true" >> $GITHUB_ENV
           else
             echo "Tag does not exist"
-            echo "::set-output name=exists::false"
-          fi
+            echo "exists=false" >> $GITHUB_ENV
+        shell: bash
 
       - name: Install buildx
-        if: steps.check_tag.outputs.exists == 'false'
+        if: env.exists == 'false'
         id: buildx
         uses: crazy-max/ghaction-docker-buildx@v1
         with:
           version: latest
 
       - name: Login to Docker Hub
-        if: steps.check_tag.outputs.exists == 'false'
+        if: env.exists == 'false'
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Build and push the image
-        if: steps.check_tag.outputs.exists == 'false'
+        if: env.exists == 'false'
         run: |
           docker buildx build --push \
           --tag datenwissenschaften/spark-zeppelin-docker:${{ steps.get_tag.outputs.tag }} \
