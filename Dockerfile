@@ -1,4 +1,4 @@
-FROM ubuntu:noble
+FROM ubuntu:24.10
 
 ARG ZEPPELIN_VERSION="0.11.1"
 ARG SPARK_VERSION="3.5.1"
